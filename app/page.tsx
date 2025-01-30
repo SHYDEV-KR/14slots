@@ -1,16 +1,16 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { SlotCategory, WeekSchedule } from "@/types"
+import { Download, RefreshCcw, Settings } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
+import { CurrentSlotInfo } from "../components/current-slot-info"
+import { MemoPad } from "../components/memo-pad"
 import { ScheduleGrid } from "../components/schedule-grid"
 import { UsageGuidelines } from "../components/usage-guidelines"
-import { MemoPad } from "../components/memo-pad"
-import { CurrentSlotInfo } from "../components/current-slot-info"
 import { useLocalStorage } from "../hooks/useLocalStorage"
-import type { WeekSchedule, SlotCategory } from "@/types"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { Clock, Download, RefreshCcw, Settings } from "lucide-react"
-import Image from "next/image"
 
 export default function HomePage() {
   const [schedule, setSchedule] = useLocalStorage<WeekSchedule>("schedule", {

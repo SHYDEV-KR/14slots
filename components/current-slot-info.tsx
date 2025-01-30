@@ -29,13 +29,6 @@ export function CurrentSlotInfo({ currentSlot }: CurrentSlotInfoProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xl font-mono font-medium">
-              {hours}:{minutes}
-            </span>
-          </div>
-          <div className="h-8 w-px bg-border" />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
