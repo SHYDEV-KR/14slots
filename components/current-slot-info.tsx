@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import type { TimeSlot } from "@/types"
 
 const CATEGORIES: Record<string, { name: string; color: string }> = {
