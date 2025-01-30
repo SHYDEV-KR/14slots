@@ -1,5 +1,5 @@
-import { TimeSlot } from "@/types"
-import { Clock, CheckCircle2, Circle } from "lucide-react"
+import { TimeSlot } from "@/types";
+import { CheckCircle2, Circle } from "lucide-react";
 import { Badge } from "./ui/badge";
 
 const CATEGORIES: Record<string, { name: string; color: string }> = {
