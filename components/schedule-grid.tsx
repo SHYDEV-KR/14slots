@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useLocalStorage } from "../hooks/useLocalStorage"
 import { Checklist } from "./checklist"
 import type { TimeSlot, SlotCategory, WeekSchedule, DailyRoutine } from "../types"
 import React from "react"
@@ -35,7 +34,6 @@ export function ScheduleGrid({
   schedule,
   setSchedule,
 }: ScheduleGridProps) {
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
   const today = new Date().getDay()
   const koreanDayIndex = today === 0 ? 6 : today - 1
 
@@ -141,7 +139,6 @@ export function ScheduleGrid({
                     <Button
                       variant="ghost"
                       className={`w-full h-24 rounded-xl ${CATEGORIES[slot.category].color} hover:opacity-90 flex flex-col items-center justify-center gap-1`}
-                      onClick={() => setSelectedSlot(slot)}
                     >
                       <span className="text-xs font-medium">{period}</span>
                       {slot.title && <span className="text-sm font-medium truncate w-full px-2">{slot.title}</span>}

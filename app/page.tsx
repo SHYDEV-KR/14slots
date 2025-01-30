@@ -20,27 +20,6 @@ export default function HomePage() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [showAdminButtons, setShowAdminButtons] = useState(false)
 
-  const handleRoutineUpdate = (routineId: string, day: string, updates: { completed?: boolean; note?: string }) => {
-    const updateRoutines = (routines: DailyRoutine[], setRoutines: (routines: DailyRoutine[]) => void) => {
-      const updatedRoutines = routines.map(routine => {
-        if (routine.id === routineId) {
-          return {
-            ...routine,
-            dailyStatus: {
-              ...routine.dailyStatus,
-              [day]: {
-                ...routine.dailyStatus[day],
-                ...updates,
-              },
-            },
-          }
-        }
-        return routine
-      })
-      setRoutines(updatedRoutines)
-    }
-  }
-
   const getCurrentSlot = () => {
     const now = new Date()
     const days = ["일", "월", "화", "수", "목", "금", "토"]

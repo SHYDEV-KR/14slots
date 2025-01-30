@@ -16,21 +16,6 @@ export interface CurrentSlotInfoProps {
 }
 
 export function CurrentSlotInfo({ currentSlot }: CurrentSlotInfoProps) {
-  const [currentTime, setCurrentTime] = useState(new Date())
-  
-  const getCurrentPeriod = (hour: number) => {
-    if (hour >= 2 && hour < 12) return "오전"
-    return "오후"
-  }
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
   if (!currentSlot) {
     return (
       <div className="bg-muted/50 p-4 rounded-lg mb-4">

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { useLocalStorage } from "../hooks/useLocalStorage"
 
