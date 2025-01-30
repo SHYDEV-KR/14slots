@@ -1,14 +1,14 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checklist } from "./checklist"
-import type { TimeSlot, SlotCategory, WeekSchedule, DailyRoutine } from "../types"
+import { Textarea } from "@/components/ui/textarea"
 import React from "react"
+import type { DailyRoutine, SlotCategory, TimeSlot, WeekSchedule } from "../types"
+import { Checklist } from "./checklist"
 import { RoutineManager } from "./routine-manager"
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"]
@@ -140,7 +140,6 @@ export function ScheduleGrid({
                       className={`w-full h-24 rounded-xl ${CATEGORIES[slot.category].color} hover:opacity-90 flex flex-col items-center justify-center gap-1`}
                     >
                       <span className="text-xs font-medium">{period}</span>
-                      {slot.title && <span className="text-sm font-medium truncate w-full px-2">{slot.title}</span>}
                       {slot.checklist.length > 0 && (
                         <span className="text-xs">
                           {slot.checklist.filter((item) => item.completed).length}/{slot.checklist.length}
