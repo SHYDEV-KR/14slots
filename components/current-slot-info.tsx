@@ -21,10 +21,6 @@ export function CurrentSlotInfo({ currentSlot }: CurrentSlotInfoProps) {
     return null
   }
 
-  const now = new Date()
-  const hours = now.getHours().toString().padStart(2, "0")
-  const minutes = now.getMinutes().toString().padStart(2, "0")
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
