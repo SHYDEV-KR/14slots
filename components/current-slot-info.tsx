@@ -1,5 +1,6 @@
 import { TimeSlot } from "@/types"
 import { Clock, CheckCircle2, Circle } from "lucide-react"
+import { Badge } from "./ui/badge";
 
 const CATEGORIES: Record<string, { name: string; color: string }> = {
   personal: { name: "개인 충전/회복", color: "bg-blue-200" },
@@ -46,6 +47,9 @@ export function CurrentSlotInfo({ currentSlot }: CurrentSlotInfoProps) {
                 </span>
               )}
             </div>
+            <Badge variant="secondary" className="text-xs">
+              {CATEGORIES[currentSlot.category].name}
+            </Badge>
           </div>
         </div>
       </div>

@@ -87,6 +87,10 @@ export default function HomePage() {
           </div>
           <p className="text-lg text-muted-foreground max-w-[600px]">
             14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.
+            <br />
+            <span className="text-sm text-muted-foreground">
+            *슬롯이 안 보인다면 관리자 메뉴 - 슬롯 초기화하기 버튼을 눌러주세요.
+            </span>
           </p>
           <UsageGuidelines />
           <a 
