@@ -2,9 +2,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, X, Edit2 } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import type { DailyRoutine } from "@/types"
 import { useState } from "react"
+import React from "react"
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"]
 
@@ -12,7 +13,7 @@ interface RoutineManagerProps {
   routines: DailyRoutine[]
   onRoutineAdd: (text: string) => void
   onRoutineRemove: (id: string) => void
-  onRoutineUpdate: (routineId: string, day: string, updates: { completed?: boolean; note?: string }) => void
+  onRoutineUpdate: (routineId: string, date: string, updates: { completed?: boolean; completedAt?: string; note?: string }) => void
   title: string
   buttonClassName?: string
 }
@@ -20,6 +21,33 @@ interface RoutineManagerProps {
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return ""
   return text.length > maxLength ? text.slice(0, maxLength) + "..." : text
+}
+
+const getDateString = (date: Date) => {
+  return date.toISOString().split('T')[0]
+}
+
+const getPastDates = (weeks: number) => {
+  const dates: (Date | null)[][] = Array(7).fill(null).map(() => Array(weeks).fill(null))
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const currentDayOfWeek = today.getDay()
+  const mondayBasedDay = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1
+  
+  for (let week = 0; week < weeks; week++) {
+    for (let day = 0; day < 7; day++) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - (week * 7 + (mondayBasedDay - day)))
+      
+      // 오늘 이후의 날짜는 null로 설정
+      if (date <= today) {
+        dates[day][weeks - 1 - week] = date
+      }
+    }
+  }
+  
+  return dates
 }
 
 export function RoutineManager({
@@ -31,11 +59,33 @@ export function RoutineManager({
   buttonClassName,
 }: RoutineManagerProps) {
   const [newRoutine, setNewRoutine] = useState("")
+  const dates = getPastDates(16)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = getDateString(today)
 
   const handleAddRoutine = () => {
     if (!newRoutine.trim()) return
     onRoutineAdd(newRoutine.trim())
     setNewRoutine("")
+  }
+
+  const handleCheckIn = (routineId: string) => {
+    const routine = routines.find(r => r.id === routineId)
+    if (!routine) return
+    
+    // 이미 완료 상태가 있더라도 버튼은 계속 누를 수 있지만,
+    // 실제 상태 업데이트는 처음 한 번만 수행
+    if (!routine.dailyStatus[todayStr]?.completed) {
+      onRoutineUpdate(routineId, todayStr, {
+        completed: true,
+        completedAt: new Date().toISOString(),
+      })
+    }
+  }
+
+  const handleNoteUpdate = (routineId: string, note: string) => {
+    onRoutineUpdate(routineId, todayStr, { note })
   }
 
   return (
@@ -69,7 +119,7 @@ export function RoutineManager({
             </Button>
           </div>
           <div className="overflow-y-auto flex-1 p-4">
-            <div className="space-y-4">
+            <div className="space-y-8">
               {routines.map(routine => (
                 <div key={routine.id} className="pb-4 border-b last:border-b-0">
                   <div className="flex items-center justify-between mb-3">
@@ -82,51 +132,46 @@ export function RoutineManager({
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div className="space-y-2">
-                    {DAYS.map(day => (
-                      <div key={day} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={routine.dailyStatus[day]?.completed || false}
-                          onChange={(e) =>
-                            onRoutineUpdate(routine.id, day, {
-                              completed: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4"
-                        />
-                        <span className="font-medium w-14">{day}요일</span>
-                        <span className="flex-1 text-sm text-gray-600">
-                          {truncateText(routine.dailyStatus[day]?.note || "", 30)}
-                        </span>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-lg">
-                            <DialogHeader>
-                              <DialogTitle>{day}요일 메모 수정</DialogTitle>
-                            </DialogHeader>
-                            <Textarea
-                              placeholder={`${day}요일 메모`}
-                              value={routine.dailyStatus[day]?.note || ""}
-                              onChange={(e) =>
-                                onRoutineUpdate(routine.id, day, {
-                                  note: e.target.value,
-                                })
-                              }
-                              className="min-h-[120px] w-full"
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    ))}
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="이 루틴에 대한 메모를 남겨보세요"
+                      value={routine.note || ""}
+                      onChange={(e) => handleNoteUpdate(routine.id, e.target.value)}
+                      className="min-h-[80px] resize-none"
+                    />
+                    <div className="grid grid-cols-[repeat(16,1fr)] gap-1">
+                      {DAYS.map((day, dayIndex) => (
+                        <React.Fragment key={day}>
+                          {dates[dayIndex].map((date, weekIndex) => {
+                            if (!date) {
+                              return (
+                                <div
+                                  key={`${dayIndex}-${weekIndex}`}
+                                  className="aspect-square rounded-sm bg-transparent"
+                                />
+                              )
+                            }
+                            const dateStr = getDateString(date)
+                            const isCompleted = routine.dailyStatus[dateStr]?.completed
+                            return (
+                              <div
+                                key={dateStr}
+                                className={`
+                                  aspect-square rounded-sm
+                                  ${isCompleted ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-800'}
+                                `}
+                              />
+                            )
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <Button
+                      onClick={() => handleCheckIn(routine.id)}
+                      className="w-full bg-green-100 hover:bg-green-200 text-green-900"
+                    >
+                      완료하기
+                    </Button>
                   </div>
                 </div>
               ))}

@@ -16,14 +16,17 @@ export interface TimeSlot {
   checklist: ChecklistItem[]
 }
 
+export interface DailyRoutineStatus {
+  completed: boolean
+  completedAt?: string
+}
+
 export interface DailyRoutine {
   id: string
   text: string
+  note?: string
   dailyStatus: {
-    [key: string]: {
-      completed: boolean
-      note?: string
-    }
+    [key: string]: DailyRoutineStatus // key format: "YYYY-MM-DD"
   }
 }
 

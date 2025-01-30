@@ -1,4 +1,5 @@
-import type { TimeSlot } from "@/types"
+import { TimeSlot } from "@/types"
+import { Clock, CheckCircle2, Circle } from "lucide-react"
 
 const CATEGORIES: Record<string, { name: string; color: string }> = {
   personal: { name: "개인 충전/회복", color: "bg-blue-200" },
@@ -16,44 +17,60 @@ export interface CurrentSlotInfoProps {
 
 export function CurrentSlotInfo({ currentSlot }: CurrentSlotInfoProps) {
   if (!currentSlot) {
-    return (
-      <div className="bg-muted/50 p-4 rounded-lg mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">미지정 슬롯</h2>
-        </div>
-        <p className="text-muted-foreground">슬롯 정보가 없습니다.</p>
-      </div>
-    )
+    return null
   }
 
+  const now = new Date()
+  const hours = now.getHours().toString().padStart(2, "0")
+  const minutes = now.getMinutes().toString().padStart(2, "0")
+
   return (
-    <div className={`p-4 rounded-lg mb-4 ${CATEGORIES[currentSlot.category].color}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">{currentSlot.title || "제목 없음"}</h2>
-        <span className="text-sm bg-white/20 px-2 py-1 rounded">
-          {CATEGORIES[currentSlot.category].name}
-        </span>
-      </div>
-      <div className="space-y-2">
-        {currentSlot.note && (
-          <p className="text-sm">{currentSlot.note}</p>
-        )}
-        {currentSlot.checklist?.length > 0 && (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xl font-mono font-medium">
+              {hours}:{minutes}
+            </span>
+          </div>
+          <div className="h-8 w-px bg-border" />
           <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {currentSlot.day}요일 {currentSlot.period === "morning" ? "오전" : "오후"}
+              </span>
+              {currentSlot.title && (
+                <span className="text-sm font-medium">
+                  {currentSlot.title}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {currentSlot.checklist.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm text-muted-foreground">
+            할 일: {currentSlot.checklist.filter(item => item.completed).length} / {currentSlot.checklist.length}
+          </div>
+          <div className="grid gap-1.5">
             {currentSlot.checklist.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={item.completed}
-                  className="w-4 h-4"
-                  readOnly
-                />
-                <span className="text-sm">{item.text}</span>
+                {item.completed ? (
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                ) : (
+                  <Circle className="w-4 h-4 text-muted-foreground" />
+                )}
+                <span className={`text-sm ${item.completed ? "line-through text-muted-foreground" : ""}`}>
+                  {item.text}
+                </span>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 } 

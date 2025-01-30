@@ -14,14 +14,49 @@ import { RoutineManager } from "./routine-manager"
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"]
 const PERIODS = ["오전", "오후"]
 
-const CATEGORIES: Record<SlotCategory, { name: string; color: string }> = {
-  personal: { name: "개인 충전/회복", color: "bg-blue-200" },
-  family: { name: "가족/연인", color: "bg-pink-200" },
-  team: { name: "팀원 관리", color: "bg-purple-200" },
-  organization: { name: "조직 문화/시스템", color: "bg-yellow-200" },
-  strategy: { name: "데이터/방향", color: "bg-green-200" },
-  business: { name: "고객/사업개발", color: "bg-orange-200" },
-  unassigned: { name: "미지정", color: "bg-gray-200" },
+const CATEGORIES: Record<SlotCategory, { name: string; color: string; bgClass: string; hoverClass: string }> = {
+  personal: { 
+    name: "개인 충전/회복", 
+    color: "text-blue-500",
+    bgClass: "bg-blue-500/10 dark:bg-blue-500/20",
+    hoverClass: "hover:bg-blue-500/20 dark:hover:bg-blue-500/30"
+  },
+  family: { 
+    name: "가족/연인", 
+    color: "text-pink-500",
+    bgClass: "bg-pink-500/10 dark:bg-pink-500/20",
+    hoverClass: "hover:bg-pink-500/20 dark:hover:bg-pink-500/30"
+  },
+  team: { 
+    name: "팀원 관리", 
+    color: "text-purple-500",
+    bgClass: "bg-purple-500/10 dark:bg-purple-500/20",
+    hoverClass: "hover:bg-purple-500/20 dark:hover:bg-purple-500/30"
+  },
+  organization: { 
+    name: "조직 문화/시스템", 
+    color: "text-yellow-500",
+    bgClass: "bg-yellow-500/10 dark:bg-yellow-500/20",
+    hoverClass: "hover:bg-yellow-500/20 dark:hover:bg-yellow-500/30"
+  },
+  strategy: { 
+    name: "데이터/방향", 
+    color: "text-green-500",
+    bgClass: "bg-green-500/10 dark:bg-green-500/20",
+    hoverClass: "hover:bg-green-500/20 dark:hover:bg-green-500/30"
+  },
+  business: { 
+    name: "고객/사업개발", 
+    color: "text-orange-500",
+    bgClass: "bg-orange-500/10 dark:bg-orange-500/20",
+    hoverClass: "hover:bg-orange-500/20 dark:hover:bg-orange-500/30"
+  },
+  unassigned: { 
+    name: "미지정", 
+    color: "text-gray-500",
+    bgClass: "bg-gray-500/10 dark:bg-gray-500/20",
+    hoverClass: "hover:bg-gray-500/20 dark:hover:bg-gray-500/30"
+  },
 }
 
 interface ScheduleGridProps {
@@ -48,15 +83,14 @@ export function ScheduleGrid({
     const routine: DailyRoutine = {
       id: crypto.randomUUID(),
       text: text.trim(),
-      dailyStatus: DAYS.reduce((acc, day) => ({
-        ...acc,
-        [day]: { completed: false }
-      }), {})
+      note: "",
+      dailyStatus: {}
     }
+    const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
     setSchedule({
       ...schedule,
       [type === "morning" ? "morningRoutines" : "eveningRoutines"]: [
-        ...schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"],
+        ...currentRoutines,
         routine
       ],
       lastUpdated: new Date().toISOString(),
@@ -64,33 +98,33 @@ export function ScheduleGrid({
   }
 
   const removeRoutine = (type: "morning" | "evening") => (id: string) => {
+    const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
     setSchedule({
       ...schedule,
-      [type === "morning" ? "morningRoutines" : "eveningRoutines"]: schedule[
-        type === "morning" ? "morningRoutines" : "eveningRoutines"
-      ].filter(routine => routine.id !== id),
+      [type === "morning" ? "morningRoutines" : "eveningRoutines"]: currentRoutines.filter(routine => routine.id !== id),
       lastUpdated: new Date().toISOString(),
     })
   }
 
   const updateRoutineStatus = (type: "morning" | "evening") => (
     routineId: string,
-    day: string,
-    updates: { completed?: boolean; note?: string }
+    date: string,
+    updates: { completed?: boolean; completedAt?: string; note?: string }
   ) => {
+    const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
     setSchedule({
       ...schedule,
-      [type === "morning" ? "morningRoutines" : "eveningRoutines"]: schedule[
-        type === "morning" ? "morningRoutines" : "eveningRoutines"
-      ].map(routine =>
+      [type === "morning" ? "morningRoutines" : "eveningRoutines"]: currentRoutines.map(routine =>
         routine.id === routineId
           ? {
               ...routine,
+              note: updates.note !== undefined ? updates.note : routine.note,
               dailyStatus: {
                 ...routine.dailyStatus,
-                [day]: {
-                  ...routine.dailyStatus[day],
-                  ...updates,
+                [date]: {
+                  ...routine.dailyStatus[date],
+                  completed: updates.completed,
+                  completedAt: updates.completedAt,
                 }
               }
             }
@@ -101,16 +135,16 @@ export function ScheduleGrid({
   }
 
   return (
-    <div className="max-w-lg mx-auto p-4">
-      <div className="grid grid-cols-7 gap-2">
+    <div className="space-y-6">
+      <div className="grid grid-cols-7 gap-3">
         {/* Days header */}
         {DAYS.map((day, index) => (
           <div
             key={day}
-            className={`text-center font-medium p-2 ${
+            className={`text-center font-medium p-2 rounded-lg ${
               index === koreanDayIndex
-                ? "bg-primary text-primary-foreground rounded-full"
-                : ""
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground"
             }`}
           >
             {day}
@@ -124,7 +158,7 @@ export function ScheduleGrid({
           onRoutineAdd={addRoutine("morning")}
           onRoutineRemove={removeRoutine("morning")}
           onRoutineUpdate={updateRoutineStatus("morning")}
-          buttonClassName="col-span-7 h-24 rounded-xl bg-yellow-100 hover:bg-yellow-200 flex flex-col items-center justify-center gap-1"
+          buttonClassName="col-span-7 h-28 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 hover:bg-amber-500/20 dark:hover:bg-amber-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-amber-500"
         />
 
         {/* Time Slots */}
@@ -137,11 +171,11 @@ export function ScheduleGrid({
                   <DialogTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={`w-full h-24 rounded-xl ${CATEGORIES[slot.category].color} hover:opacity-90 flex flex-col items-center justify-center gap-1`}
+                      className={`w-full h-28 rounded-xl ${CATEGORIES[slot.category].bgClass} ${CATEGORIES[slot.category].hoverClass} transition-colors flex flex-col items-center justify-center gap-2 group`}
                     >
-                      <span className="text-xs font-medium">{period}</span>
+                      <span className={`text-xs font-medium ${CATEGORIES[slot.category].color}`}>{period}</span>
                       {slot.checklist.length > 0 && (
-                        <span className="text-xs">
+                        <span className={`text-xs ${CATEGORIES[slot.category].color}`}>
                           {slot.checklist.filter((item) => item.completed).length}/{slot.checklist.length}
                         </span>
                       )}
@@ -173,8 +207,8 @@ export function ScheduleGrid({
                               <SelectValue placeholder="카테고리 선택" />
                             </SelectTrigger>
                             <SelectContent>
-                              {Object.entries(CATEGORIES).map(([value, { name }]) => (
-                                <SelectItem key={value} value={value}>
+                              {Object.entries(CATEGORIES).map(([value, { name, color }]) => (
+                                <SelectItem key={value} value={value} className={color}>
                                   {name}
                                 </SelectItem>
                               ))}
@@ -207,10 +241,10 @@ export function ScheduleGrid({
           onRoutineAdd={addRoutine("evening")}
           onRoutineRemove={removeRoutine("evening")}
           onRoutineUpdate={updateRoutineStatus("evening")}
-          buttonClassName="col-span-7 h-24 rounded-xl bg-indigo-100 hover:bg-indigo-200 flex flex-col items-center justify-center gap-1"
+          buttonClassName="col-span-7 h-28 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-indigo-500"
         />
       </div>
-      <div className="mt-4 text-sm text-gray-500 text-center">
+      <div className="text-sm text-muted-foreground text-center">
         마지막 수정: {new Date(schedule.lastUpdated).toLocaleString()}
       </div>
     </div>

@@ -9,6 +9,7 @@ import type { WeekSchedule, SlotCategory } from "@/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { Clock, Download, RefreshCcw, Settings } from "lucide-react"
 
 export default function HomePage() {
   const [schedule, setSchedule] = useLocalStorage<WeekSchedule>("schedule", {
@@ -78,51 +79,75 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="container max-w-lg mx-auto py-8 px-4">
-        <div className="flex flex-col justify-between items-center mb-8 gap-4">
-          <h1 className="text-2xl font-bold">14 Slots Time Management</h1>
-          <UsageGuidelines />
-          <p className="text-sm text-muted-foreground">
-            참고 자료: <a href="https://brunch.co.kr/@maxhan/61" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
-              맥스의 시간관리 방법 - 브런치
-            </a>
+      <div className="container max-w-4xl mx-auto py-12 px-4 space-y-8">
+        <div className="flex flex-col items-center space-y-6 text-center">
+          <div className="flex items-center gap-2">
+            <Clock className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight">14 Slots</h1>
+          </div>
+          <p className="text-lg text-muted-foreground max-w-[600px]">
+            14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.
           </p>
+          <UsageGuidelines />
+          <a 
+            href="https://brunch.co.kr/@maxhan/61" 
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            참고 자료: 맥스의 시간관리 방법 - 브런치
+          </a>
         </div>
-        <CurrentSlotInfo 
-          currentSlot={getCurrentSlot()} 
-        />
-        <ScheduleGrid 
-          schedule={schedule}
-          setSchedule={setSchedule}
-        />
-        <MemoPad />
-        <div className="mt-8 text-center">
+
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <CurrentSlotInfo currentSlot={getCurrentSlot()} />
+        </div>
+
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <ScheduleGrid 
+            schedule={schedule}
+            setSchedule={setSchedule}
+          />
+        </div>
+
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <MemoPad />
+        </div>
+
+        <div className="flex justify-center">
           <Button
             variant="ghost"
-            className="text-xs text-muted-foreground hover:text-foreground"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setShowAdminButtons(!showAdminButtons)}
           >
+            <Settings className="w-4 h-4 mr-2" />
             {showAdminButtons ? "관리자 메뉴 숨기기" : "관리자 메뉴 보기"}
           </Button>
-          {showAdminButtons && (
-            <div className="mt-4 space-x-4">
-              <Button
-                variant="outline"
-                onClick={handleDownload}
-                className="text-sm"
-              >
-                슬롯 정보 다운로드
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setShowResetDialog(true)}
-                className="text-sm"
-              >
-                슬롯 초기화하기
-              </Button>
-            </div>
-          )}
         </div>
+
+        {showAdminButtons && (
+          <div className="flex justify-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              슬롯 정보 다운로드
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowResetDialog(true)}
+              className="gap-2"
+            >
+              <RefreshCcw className="w-4 h-4" />
+              슬롯 초기화하기
+            </Button>
+          </div>
+        )}
       </div>
 
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
