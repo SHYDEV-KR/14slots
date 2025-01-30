@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: "14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.",
   keywords: ["시간관리", "14slots", "생산성", "루틴", "스케줄"],
   authors: [{ name: "shydev" }],
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "14 Slots Time Management",
     description: "14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.",
@@ -26,9 +30,9 @@ export const metadata: Metadata = {
     siteName: "14 Slots",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "/logo.png",
+        width: 512,
+        height: 512,
         alt: "14 Slots Time Management",
       },
     ],
@@ -37,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "14 Slots Time Management",
     description: "14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.",
-    images: ["/og-image.png"],
+    images: ["/logo.png"],
   },
 };
 

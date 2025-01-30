@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Clock, Download, RefreshCcw, Settings } from "lucide-react"
+import Image from "next/image"
 
 export default function HomePage() {
   const [schedule, setSchedule] = useLocalStorage<WeekSchedule>("schedule", {
@@ -82,7 +83,13 @@ export default function HomePage() {
       <div className="container max-w-4xl mx-auto py-12 px-4 space-y-8">
         <div className="flex flex-col items-center space-y-6 text-center">
           <div className="flex items-center gap-2">
-            <Clock className="w-8 h-8 text-primary" />
+            <Image
+              src="/logo.png"
+              alt="14 Slots Logo"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
             <h1 className="text-3xl font-bold tracking-tight">14 Slots</h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-[600px]">
