@@ -1,7 +1,5 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import * as React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 interface DualRangeSliderProps {
@@ -10,6 +8,7 @@ interface DualRangeSliderProps {
   step?: number
   value: [number, number]
   onChange: (value: [number, number]) => void
+  className?: string
 }
 
 export function DualRangeSlider({
@@ -18,6 +17,7 @@ export function DualRangeSlider({
   step = 1,
   value,
   onChange,
+  className,
 }: DualRangeSliderProps) {
   const [isDragging, setIsDragging] = useState<"min" | "max" | null>(null)
   const sliderRef = useRef<HTMLDivElement>(null)
@@ -72,7 +72,7 @@ export function DualRangeSlider({
   return (
     <div
       ref={sliderRef}
-      className="relative h-4 w-full cursor-pointer"
+      className={`relative h-4 w-full cursor-pointer ${className || ''}`}
       onClick={(e) => {
         const newValue = getValueFromPosition(e.clientX)
         const distToMin = Math.abs(newValue - value[0])

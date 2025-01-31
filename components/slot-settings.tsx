@@ -158,9 +158,9 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
                       min={0}
                       max={1440}
                       step={30}
-                      minStepsBetweenThumbs={60}
-                      label={(value) => minutesToTime(value)}
-                      labelPosition="top"
+                      onChange={(value) => {
+                        updateRange(index, { start: minutesToTime(value[0]), end: minutesToTime(value[1]) })
+                      }}
                       className="my-4 pointer-events-none opacity-50"
                     />
                   </div>
