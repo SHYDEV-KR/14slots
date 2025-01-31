@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/sheet"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import type { TimeRange, TimeSlot, WeekSchedule } from "@/types"
-import { Download, Menu, RefreshCcw } from "lucide-react"
+import { Download, Menu } from "lucide-react"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { SlotSettings } from "./slot-settings"
 import { UsageGuidelines } from "./usage-guidelines"
 
@@ -46,7 +46,7 @@ export function Header() {
           setHasStorageError(true)
         }
       }
-    } catch (error) {
+    } catch {
       setHasStorageError(true)
     }
   }, [])
@@ -125,32 +125,6 @@ export function Header() {
 
     // 페이지 리로드
     window.location.reload()
-  }
-
-  const createInitialSlots = () => {
-    const days = ["월", "화", "수", "목", "금", "토", "일"]
-    const defaultTimeRanges: TimeRange[] = [
-      { label: "오전", start: "08:00", end: "12:00" },
-      { label: "오후", start: "13:00", end: "17:00" },
-    ]
-    let slotId = 0
-    const slots = []
-
-    for (const day of days) {
-      for (const timeRange of defaultTimeRanges) {
-        slots.push({
-          id: slotId++,
-          day,
-          period: timeRange.label,
-          title: "",
-          note: "",
-          category: "unassigned" as const,
-          checklist: [],
-          timeRange,
-        })
-      }
-    }
-    return { slots, timeRanges: defaultTimeRanges }
   }
 
   const handleReset = () => {

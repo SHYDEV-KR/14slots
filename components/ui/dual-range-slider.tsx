@@ -2,144 +2,112 @@
 
 import { cn } from "@/lib/utils"
 import * as React from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface DualRangeSliderProps {
   min: number
   max: number
-  value: [number, number]
   step?: number
-  minStepsBetweenThumbs?: number
-  label?: (value: number) => React.ReactNode
-  labelPosition?: "top" | "bottom"
-  className?: string
-  onChange?: (value: [number, number]) => void
+  value: [number, number]
+  onChange: (value: [number, number]) => void
 }
 
-export const DualRangeSlider = React.forwardRef<HTMLDivElement, DualRangeSliderProps>(
-  ({ min, max, value, step = 1, minStepsBetweenThumbs = 1, label, labelPosition = "top", className, onChange }, ref) => {
-    const [isDragging, setIsDragging] = React.useState<number | null>(null)
-    const [values, setValues] = React.useState<[number, number]>(value)
-    const sliderRef = React.useRef<HTMLDivElement>(null)
+export function DualRangeSlider({
+  min,
+  max,
+  step = 1,
+  value,
+  onChange,
+}: DualRangeSliderProps) {
+  const [isDragging, setIsDragging] = useState<"min" | "max" | null>(null)
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const minThumbRef = useRef<HTMLDivElement>(null)
+  const maxThumbRef = useRef<HTMLDivElement>(null)
 
-    React.useEffect(() => {
-      setValues(value)
-    }, [value])
+  const getValueFromPosition = useCallback((position: number) => {
+    if (!sliderRef.current) return min
 
-    const getPercentage = (value: number) => {
-      return ((value - min) / (max - min)) * 100
+    const sliderRect = sliderRef.current.getBoundingClientRect()
+    const percentage = (position - sliderRect.left) / sliderRect.width
+    let value = min + percentage * (max - min)
+
+    // Step 값에 맞춰 조정
+    value = Math.round(value / step) * step
+
+    // min, max 범위 내로 조정
+    return Math.min(Math.max(value, min), max)
+  }, [min, max, step])
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return
+
+    const newValue = getValueFromPosition(e.clientX)
+
+    if (isDragging === "min") {
+      onChange([Math.min(newValue, value[1] - step), value[1]])
+    } else {
+      onChange([value[0], Math.max(newValue, value[0] + step)])
+    }
+  }, [isDragging, getValueFromPosition, onChange, value, step])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(null)
+  }, [])
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseup", handleMouseUp)
     }
 
-    const getValueFromPosition = (position: number) => {
-      const percentage = position
-      const rawValue = (percentage * (max - min)) / 100 + min
-      const steppedValue = Math.round(rawValue / step) * step
-      return Math.min(Math.max(steppedValue, min), max)
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
     }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
-    const handleMouseDown = (index: number) => (e: React.MouseEvent) => {
-      e.preventDefault()
-      setIsDragging(index)
-    }
+  const leftPercentage = ((value[0] - min) / (max - min)) * 100
+  const rightPercentage = ((value[1] - min) / (max - min)) * 100
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging === null || !sliderRef.current) return
-
-      const rect = sliderRef.current.getBoundingClientRect()
-      const position = ((e.clientX - rect.left) / rect.width) * 100
-      const newValue = getValueFromPosition(position)
-
-      setValues(prev => {
-        const newValues = [...prev] as [number, number]
-        
-        if (isDragging === 0) {
-          if (newValue >= values[1] - step * minStepsBetweenThumbs) {
-            newValues[0] = values[1] - step * minStepsBetweenThumbs
-          } else {
-            newValues[0] = newValue
-          }
+  return (
+    <div
+      ref={sliderRef}
+      className="relative h-4 w-full cursor-pointer"
+      onClick={(e) => {
+        const newValue = getValueFromPosition(e.clientX)
+        const distToMin = Math.abs(newValue - value[0])
+        const distToMax = Math.abs(newValue - value[1])
+        if (distToMin < distToMax) {
+          onChange([newValue, value[1]])
         } else {
-          if (newValue <= values[0] + step * minStepsBetweenThumbs) {
-            newValues[1] = values[0] + step * minStepsBetweenThumbs
-          } else {
-            newValues[1] = newValue
-          }
+          onChange([value[0], newValue])
         }
-
-        onChange?.(newValues)
-        return newValues
-      })
-    }
-
-    const handleMouseUp = () => {
-      setIsDragging(null)
-    }
-
-    React.useEffect(() => {
-      if (isDragging !== null) {
-        window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('mouseup', handleMouseUp)
-      }
-
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-      }
-    }, [isDragging, values, handleMouseMove])
-
-    const renderLabels = () => {
-      if (!label) return null
-
-      return (
-        <div className={cn(
-          "flex justify-between w-full",
-          labelPosition === "top" ? "mb-2" : "mt-2"
-        )}>
-          {values.map((v, i) => (
-            <span key={i} className="text-sm text-muted-foreground">
-              {label(v)}
-            </span>
-          ))}
-        </div>
-      )
-    }
-
-    return (
-      <div className="w-full" ref={ref}>
-        {labelPosition === "top" && renderLabels()}
+      }}
+    >
+      <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 bg-secondary">
         <div
-          ref={sliderRef}
-          className={cn(
-            "relative h-1.5 w-full rounded-full bg-secondary",
-            className
-          )}
-        >
-          <div
-            className="absolute h-full bg-primary rounded-full"
-            style={{
-              left: `${getPercentage(values[0])}%`,
-              width: `${getPercentage(values[1]) - getPercentage(values[0])}%`
-            }}
-          />
-          {values.map((value, index) => (
-            <div
-              key={index}
-              className={cn(
-                "absolute top-1/2 -translate-x-1/2 -translate-y-1/2",
-                "h-4 w-4 cursor-pointer rounded-full border border-primary/50 bg-background shadow",
-                "transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:pointer-events-none disabled:opacity-50"
-              )}
-              style={{
-                left: `${getPercentage(value)}%`
-              }}
-              onMouseDown={handleMouseDown(index)}
-            />
-          ))}
-        </div>
-        {labelPosition === "bottom" && renderLabels()}
+          className="absolute h-full bg-primary"
+          style={{
+            left: `${leftPercentage}%`,
+            right: `${100 - rightPercentage}%`,
+          }}
+        />
       </div>
-    )
-  }
-)
+
+      <div
+        ref={minThumbRef}
+        className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border bg-background shadow-sm"
+        style={{ left: `${leftPercentage}%` }}
+        onMouseDown={() => setIsDragging("min")}
+      />
+      <div
+        ref={maxThumbRef}
+        className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border bg-background shadow-sm"
+        style={{ left: `${rightPercentage}%` }}
+        onMouseDown={() => setIsDragging("max")}
+      />
+    </div>
+  )
+}
 
 DualRangeSlider.displayName = "DualRangeSlider" 
