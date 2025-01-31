@@ -77,10 +77,10 @@ function SlotContent({ slot, timeRange }: { slot: TimeSlot; timeRange: TimeRange
     )
   }
 
-  if (slot.title) {
+  if (slot.category !== "unassigned") {
     return (
       <div className="text-sm font-medium line-clamp-2 text-center break-keep">
-        {slot.title}
+        0/0
       </div>
     )
   }
