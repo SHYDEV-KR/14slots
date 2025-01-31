@@ -129,27 +129,27 @@ function SortableMemoItem({ memo, onRemove }: SortableMemoItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-start justify-between gap-4 rounded-lg border p-3 bg-card"
+      className="group flex items-start gap-2 rounded-lg border p-3 bg-card"
     >
       <Button
         variant="ghost"
         size="icon"
-        className="h-5 w-5 cursor-grab"
+        className="h-5 w-5 cursor-grab shrink-0"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="w-4 h-4" />
       </Button>
-      <div className="flex-1 space-y-1">
-        <p className="text-sm whitespace-pre-wrap">{memo.text}</p>
-        <p className="text-xs text-muted-foreground">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm whitespace-pre-wrap break-words">{memo.text}</p>
+        <p className="text-xs text-muted-foreground mt-1">
           {new Date(memo.createdAt).toLocaleString()}
         </p>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={() => onRemove(memo.id)}
       >
         <X className="w-4 h-4" />
