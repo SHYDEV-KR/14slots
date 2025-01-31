@@ -84,7 +84,7 @@ export const DualRangeSlider = React.forwardRef<HTMLDivElement, DualRangeSliderP
         window.removeEventListener('mousemove', handleMouseMove)
         window.removeEventListener('mouseup', handleMouseUp)
       }
-    }, [isDragging, values])
+    }, [isDragging, values, handleMouseMove])
 
     const renderLabels = () => {
       if (!label) return null

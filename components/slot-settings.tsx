@@ -69,12 +69,6 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
     )
   }
 
-  const updateTimeRange = (index: number, [startMinutes, endMinutes]: number[]) => {
-    const start = minutesToTime(startMinutes)
-    const end = minutesToTime(endMinutes)
-    updateRange(index, { start, end })
-  }
-
   const removeRange = (index: number) => {
     setRanges(ranges.filter((_, i) => i !== index))
   }

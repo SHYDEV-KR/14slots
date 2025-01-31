@@ -21,7 +21,6 @@ import { UsageGuidelines } from "./usage-guidelines"
 
 export function Header() {
   const [showResetDialog, setShowResetDialog] = useState(false)
-  const [forceUpdate, setForceUpdate] = useState(0)
   const [schedule, setSchedule] = useLocalStorage<WeekSchedule>("schedule", {
     slots: [],
     morningRoutines: [],
@@ -168,7 +167,6 @@ export function Header() {
         
         <div className="flex items-center gap-2">
           <SlotSettings
-            key={forceUpdate}
             timeRanges={schedule.settings?.timeRanges || [
               { label: "오전", start: "08:00", end: "12:00" },
               { label: "오후", start: "13:00", end: "17:00" },

@@ -215,7 +215,7 @@ export function ScheduleGrid({
       }
       setSchedule(newSchedule)
     }
-  }, [schedule.slots.length, setSchedule])
+  }, [schedule.slots.length, setSchedule, schedule.morningRoutines, schedule.eveningRoutines, schedule.settings])
 
   return (
     <div className="space-y-6">
