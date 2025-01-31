@@ -1,13 +1,30 @@
 "use client"
 
-import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { StickyNote, X, CheckSquare, Square, Plus } from "lucide-react"
-import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { CheckSquare, GripVertical, Plus, Square, StickyNote, X } from "lucide-react"
+import { useState } from "react"
 
 interface Todo {
   id: string
@@ -22,11 +39,137 @@ interface Memo {
   createdAt: string
 }
 
+interface SortableTodoItemProps {
+  todo: Todo
+  onToggle: (id: string) => void
+  onRemove: (id: string) => void
+}
+
+interface SortableMemoItemProps {
+  memo: Memo
+  onRemove: (id: string) => void
+}
+
+function SortableTodoItem({ todo, onToggle, onRemove }: SortableTodoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: todo.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group flex items-start gap-2 rounded-lg border p-3 bg-card"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-5 w-5 cursor-grab"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-5 w-5"
+        onClick={() => onToggle(todo.id)}
+      >
+        {todo.completed ? (
+          <CheckSquare className="w-4 h-4" />
+        ) : (
+          <Square className="w-4 h-4" />
+        )}
+      </Button>
+      <div className="flex-1 space-y-1">
+        <p className={`text-sm ${todo.completed ? "line-through text-muted-foreground" : ""}`}>
+          {todo.text}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {new Date(todo.createdAt).toLocaleString()}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => onRemove(todo.id)}
+      >
+        <X className="w-4 h-4" />
+      </Button>
+    </div>
+  )
+}
+
+function SortableMemoItem({ memo, onRemove }: SortableMemoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: memo.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group flex items-start justify-between gap-4 rounded-lg border p-3 bg-card"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-5 w-5 cursor-grab"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </Button>
+      <div className="flex-1 space-y-1">
+        <p className="text-sm whitespace-pre-wrap">{memo.text}</p>
+        <p className="text-xs text-muted-foreground">
+          {new Date(memo.createdAt).toLocaleString()}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => onRemove(memo.id)}
+      >
+        <X className="w-4 h-4" />
+      </Button>
+    </div>
+  )
+}
+
 export function MemoPad() {
   const [todos, setTodos] = useLocalStorage<Todo[]>("todos", [])
   const [memos, setMemos] = useLocalStorage<Memo[]>("memos", [])
   const [newTodo, setNewTodo] = useState("")
   const [newMemo, setNewMemo] = useState("")
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const handleAddTodo = () => {
     if (!newTodo.trim()) return
@@ -67,6 +210,28 @@ export function MemoPad() {
     setMemos(memos.filter((memo) => memo.id !== id))
   }
 
+  const handleDragEndTodos = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setTodos((items) => {
+        const oldIndex = items.findIndex((item) => item.id === String(active.id))
+        const newIndex = items.findIndex((item) => item.id === String(over.id))
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
+  const handleDragEndMemos = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setMemos((items) => {
+        const oldIndex = items.findIndex((item) => item.id === String(active.id))
+        const newIndex = items.findIndex((item) => item.id === String(over.id))
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -93,48 +258,29 @@ export function MemoPad() {
             </Button>
           </div>
           <ScrollArea className="h-[200px]">
-            <div className="space-y-2">
-              {todos.map((todo) => (
-                <div
-                  key={todo.id}
-                  className="group flex items-start gap-2 rounded-lg border p-3 bg-card"
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5"
-                    onClick={() => handleToggleTodo(todo.id)}
-                  >
-                    {todo.completed ? (
-                      <CheckSquare className="w-4 h-4" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <div className="flex-1 space-y-1">
-                    <p className={`text-sm ${todo.completed ? "line-through text-muted-foreground" : ""}`}>
-                      {todo.text}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(todo.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleRemoveTodo(todo.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEndTodos}
+            >
+              <SortableContext items={todos} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {todos.map((todo) => (
+                    <SortableTodoItem
+                      key={todo.id}
+                      todo={todo}
+                      onToggle={handleToggleTodo}
+                      onRemove={handleRemoveTodo}
+                    />
+                  ))}
+                  {todos.length === 0 && (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      할 일이 없습니다.
+                    </div>
+                  )}
                 </div>
-              ))}
-              {todos.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-8">
-                  할 일이 없습니다.
-                </div>
-              )}
-            </div>
+              </SortableContext>
+            </DndContext>
           </ScrollArea>
         </TabsContent>
 
@@ -151,34 +297,28 @@ export function MemoPad() {
             메모 추가
           </Button>
           <ScrollArea className="h-[200px]">
-            <div className="space-y-4">
-              {memos.map((memo) => (
-                <div
-                  key={memo.id}
-                  className="group flex items-start justify-between gap-4 rounded-lg border p-3 bg-card"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm whitespace-pre-wrap">{memo.text}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(memo.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleRemoveMemo(memo.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEndMemos}
+            >
+              <SortableContext items={memos} strategy={verticalListSortingStrategy}>
+                <div className="space-y-4">
+                  {memos.map((memo) => (
+                    <SortableMemoItem
+                      key={memo.id}
+                      memo={memo}
+                      onRemove={handleRemoveMemo}
+                    />
+                  ))}
+                  {memos.length === 0 && (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      메모가 없습니다.
+                    </div>
+                  )}
                 </div>
-              ))}
-              {memos.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-8">
-                  메모가 없습니다.
-                </div>
-              )}
-            </div>
+              </SortableContext>
+            </DndContext>
           </ScrollArea>
         </TabsContent>
       </Tabs>

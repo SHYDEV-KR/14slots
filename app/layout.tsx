@@ -1,7 +1,9 @@
+import { BottomNav } from "@/components/bottom-nav";
+import { Header } from "@/components/header";
+import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,8 +21,8 @@ export const metadata: Metadata = {
   keywords: ["시간관리", "14slots", "생산성", "루틴", "스케줄"],
   authors: [{ name: "shydev" }],
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/logo.svg",
+    apple: "/logo.svg",
   },
   openGraph: {
     title: "14 Slots Time Management",
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "14 Slots",
     images: [
       {
-        url: "/logo.png",
+        url: "/logo.svg",
         width: 512,
         height: 512,
         alt: "14 Slots Time Management",
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "14 Slots Time Management",
     description: "14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.",
-    images: ["/logo.png"],
+    images: ["/logo.svg"],
   },
 };
 
@@ -61,7 +63,11 @@ export default function RootLayout({
           enableSystem={false}
           storageKey="14slots-theme"
         >
-          {children}
+          <Header />
+          <div className="pb-24">
+            {children}
+          </div>
+          <BottomNav />
         </ThemeProvider>
       </body>
     </html>

@@ -1,11 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, X } from "lucide-react"
 import type { DailyRoutine } from "@/types"
-import { useState } from "react"
-import React from "react"
+import { Plus, X } from "lucide-react"
+import React, { useState } from "react"
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"]
 
@@ -80,7 +79,15 @@ export function RoutineManager({
   }
 
   const handleNoteUpdate = (routineId: string, note: string) => {
-    onRoutineUpdate(routineId, todayStr, { note })
+    const routine = routines.find(r => r.id === routineId)
+    if (!routine) return
+    
+    // 기존의 완료 상태와 완료 시간을 유지
+    const currentStatus = routine.dailyStatus[todayStr] || {}
+    onRoutineUpdate(routineId, todayStr, {
+      ...currentStatus,
+      note
+    })
   }
 
   return (

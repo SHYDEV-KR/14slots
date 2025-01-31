@@ -7,12 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import React from "react"
-import type { DailyRoutine, SlotCategory, TimeSlot, WeekSchedule } from "../types"
+import type { DailyRoutine, SlotCategory, TimeRange, TimeSlot, WeekSchedule } from "../types"
 import { Checklist } from "./checklist"
 import { RoutineManager } from "./routine-manager"
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"]
-const PERIODS = ["오전", "오후"]
+const DEFAULT_TIME_RANGES = [
+  { label: "오전", start: "08:00", end: "12:00" },
+  { label: "오후", start: "12:00", end: "18:00" },
+]
 
 const CATEGORIES: Record<SlotCategory, { name: string; color: string; bgClass: string; hoverClass: string }> = {
   personal: { 
@@ -40,7 +43,7 @@ const CATEGORIES: Record<SlotCategory, { name: string; color: string; bgClass: s
     hoverClass: "hover:bg-yellow-500/20 dark:hover:bg-yellow-500/30"
   },
   strategy: { 
-    name: "데이터/방향", 
+    name: "전략/방향", 
     color: "text-green-500",
     bgClass: "bg-green-500/10 dark:bg-green-500/20",
     hoverClass: "hover:bg-green-500/20 dark:hover:bg-green-500/30"
@@ -64,19 +67,57 @@ interface ScheduleGridProps {
   setSchedule: (schedule: WeekSchedule) => void
 }
 
+// 슬롯 내부 컨텐츠 컴포넌트 추가
+function SlotContent({ slot, timeRange }: { slot: TimeSlot; timeRange: TimeRange }) {
+  if (slot.checklist.length > 0) {
+    return (
+      <div className="text-sm font-medium">
+        {slot.checklist.filter((item) => item.completed).length}/{slot.checklist.length}
+      </div>
+    )
+  }
+
+  if (slot.title) {
+    return (
+      <div className="text-sm font-medium line-clamp-2 text-center break-keep">
+        {slot.title}
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-sm font-medium opacity-50">
+      {timeRange.label}
+    </div>
+  )
+}
+
 export function ScheduleGrid({
   schedule,
   setSchedule,
 }: ScheduleGridProps) {
   const today = new Date().getDay()
   const koreanDayIndex = today === 0 ? 6 : today - 1
+  const currentHour = new Date().getHours()
+  const currentMinute = new Date().getMinutes()
+  const currentTime = `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`
+
+  const isCurrentSlot = (slot: TimeSlot) => {
+    const dayIndex = DAYS.indexOf(slot.day)
+    if (dayIndex !== koreanDayIndex) return false
+    
+    const start = slot.timeRange.start
+    const end = slot.timeRange.end
+    return currentTime >= start && currentTime <= end
+  }
 
   const updateSlot = (slotId: number, updates: Partial<TimeSlot>) => {
-    setSchedule({
+    const newSchedule: WeekSchedule = {
       ...schedule,
       slots: schedule.slots.map((slot) => (slot.id === slotId ? { ...slot, ...updates } : slot)),
       lastUpdated: new Date().toISOString(),
-    })
+    }
+    setSchedule(newSchedule)
   }
 
   const addRoutine = (type: "morning" | "evening") => (text: string) => {
@@ -87,23 +128,25 @@ export function ScheduleGrid({
       dailyStatus: {}
     }
     const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
-    setSchedule({
+    const newSchedule: WeekSchedule = {
       ...schedule,
       [type === "morning" ? "morningRoutines" : "eveningRoutines"]: [
         ...currentRoutines,
         routine
       ],
       lastUpdated: new Date().toISOString(),
-    })
+    }
+    setSchedule(newSchedule)
   }
 
   const removeRoutine = (type: "morning" | "evening") => (id: string) => {
     const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
-    setSchedule({
+    const newSchedule: WeekSchedule = {
       ...schedule,
       [type === "morning" ? "morningRoutines" : "eveningRoutines"]: currentRoutines.filter(routine => routine.id !== id),
       lastUpdated: new Date().toISOString(),
-    })
+    }
+    setSchedule(newSchedule)
   }
 
   const updateRoutineStatus = (type: "morning" | "evening") => (
@@ -112,7 +155,7 @@ export function ScheduleGrid({
     updates: { completed?: boolean; completedAt?: string; note?: string }
   ) => {
     const currentRoutines = schedule[type === "morning" ? "morningRoutines" : "eveningRoutines"] || []
-    setSchedule({
+    const newSchedule: WeekSchedule = {
       ...schedule,
       [type === "morning" ? "morningRoutines" : "eveningRoutines"]: currentRoutines.map(routine =>
         routine.id === routineId
@@ -131,8 +174,48 @@ export function ScheduleGrid({
           : routine
       ),
       lastUpdated: new Date().toISOString(),
-    })
+    }
+    setSchedule(newSchedule)
   }
+
+  // 슬롯이 비어있을 때 초기화
+  React.useEffect(() => {
+    if (schedule.slots.length === 0) {
+      const days = ["월", "화", "수", "목", "금", "토", "일"]
+      const slots: TimeSlot[] = []
+      let slotId = 0
+
+      const timeRanges = schedule.settings?.timeRanges || DEFAULT_TIME_RANGES
+
+      for (const day of days) {
+        for (const timeRange of timeRanges) {
+          slots.push({
+            id: slotId++,
+            day,
+            period: timeRange.label,
+            title: "",
+            note: "",
+            category: "unassigned" as const,
+            checklist: [],
+            timeRange,
+          })
+        }
+      }
+
+      const newSchedule: WeekSchedule = {
+        slots,
+        morningRoutines: schedule.morningRoutines,
+        eveningRoutines: schedule.eveningRoutines,
+        settings: {
+          ...schedule.settings,
+          timeRanges,
+          lastUpdated: new Date().toISOString(),
+        },
+        lastUpdated: new Date().toISOString(),
+      }
+      setSchedule(newSchedule)
+    }
+  }, [schedule.slots.length, setSchedule])
 
   return (
     <div className="space-y-6">
@@ -158,33 +241,32 @@ export function ScheduleGrid({
           onRoutineAdd={addRoutine("morning")}
           onRoutineRemove={removeRoutine("morning")}
           onRoutineUpdate={updateRoutineStatus("morning")}
-          buttonClassName="col-span-7 h-28 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 hover:bg-amber-500/20 dark:hover:bg-amber-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-amber-500"
+          buttonClassName="col-span-7 h-16 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 hover:bg-amber-500/20 dark:hover:bg-amber-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-amber-500"
         />
 
         {/* Time Slots */}
-        {PERIODS.map((period) => (
-          <React.Fragment key={period}>
+        {(schedule.settings?.timeRanges || DEFAULT_TIME_RANGES).map((timeRange) => (
+          <React.Fragment key={timeRange.label}>
             {schedule.slots
-              .filter((slot) => slot.period === (period === "오전" ? "morning" : "afternoon"))
+              .filter((slot) => slot.period === timeRange.label)
               .map((slot) => (
                 <Dialog key={slot.id}>
                   <DialogTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={`w-full h-28 rounded-xl ${CATEGORIES[slot.category].bgClass} ${CATEGORIES[slot.category].hoverClass} transition-colors flex flex-col items-center justify-center gap-2 group`}
+                      className={`w-full h-20 rounded-xl ${CATEGORIES[slot.category].bgClass} ${CATEGORIES[slot.category].hoverClass} transition-colors flex items-center justify-center group relative ${
+                        isCurrentSlot(slot) ? "ring-2 ring-primary ring-offset-0 dark:ring-offset-background" : ""
+                      }`}
                     >
-                      <span className={`text-xs font-medium ${CATEGORIES[slot.category].color}`}>{period}</span>
-                      {slot.checklist.length > 0 && (
-                        <span className={`text-xs ${CATEGORIES[slot.category].color}`}>
-                          {slot.checklist.filter((item) => item.completed).length}/{slot.checklist.length}
-                        </span>
-                      )}
+                      <div className={`flex flex-col items-center justify-center w-full px-1 ${CATEGORIES[slot.category].color}`}>
+                        <SlotContent slot={slot} timeRange={timeRange} />
+                      </div>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>
-                        {slot.day} {period} 슬롯 설정
+                        {slot.day} {timeRange.label} ({timeRange.start}-{timeRange.end}) 슬롯 설정
                       </DialogTitle>
                     </DialogHeader>
                     <Tabs defaultValue="basic" className="w-full">
@@ -241,7 +323,7 @@ export function ScheduleGrid({
           onRoutineAdd={addRoutine("evening")}
           onRoutineRemove={removeRoutine("evening")}
           onRoutineUpdate={updateRoutineStatus("evening")}
-          buttonClassName="col-span-7 h-28 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-indigo-500"
+          buttonClassName="col-span-7 h-16 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30 transition-colors flex flex-col items-center justify-center gap-1 text-indigo-500"
         />
       </div>
       <div className="text-sm text-muted-foreground text-center">
