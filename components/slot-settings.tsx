@@ -97,7 +97,7 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
             <Settings2 className="h-5 w-5" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-md h-[80vh] flex flex-col p-0">
+        <DialogContent className="max-w-md h-[80vh] flex flex-col p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
           <div className="px-6 py-6">
             <DialogHeader>
               <DialogTitle>시간대 설정</DialogTitle>
@@ -122,6 +122,8 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
                         }
                         className="w-full"
                         maxLength={4}
+                        autoFocus={false}
+                        tabIndex={-1}
                       />
                     </div>
                     <Button
@@ -141,6 +143,8 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
                           value={range.start}
                           onChange={(e) => updateRange(index, { start: e.target.value })}
                           className="w-full"
+                          autoFocus={false}
+                          tabIndex={-1}
                         />
                       </div>
                       <span className="text-muted-foreground">~</span>
@@ -150,6 +154,8 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
                           value={range.end}
                           onChange={(e) => updateRange(index, { end: e.target.value })}
                           className="w-full"
+                          autoFocus={false}
+                          tabIndex={-1}
                         />
                       </div>
                     </div>
@@ -180,7 +186,7 @@ export function SlotSettings({ timeRanges, onSave }: SlotSettingsProps) {
       </Dialog>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>시간대 설정 변경 확인</DialogTitle>
             <DialogDescription className="flex items-start gap-2 pt-2">

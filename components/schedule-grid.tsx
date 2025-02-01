@@ -289,7 +289,7 @@ export function ScheduleGrid({
 
         {/* Morning Routines */}
         <RoutineManager
-          title="아침 루틴"
+          title="시작 루틴"
           routines={schedule.morningRoutines}
           onRoutineAdd={addRoutine("morning")}
           onRoutineRemove={removeRoutine("morning")}
@@ -371,7 +371,7 @@ export function ScheduleGrid({
 
         {/* Evening Routines */}
         <RoutineManager
-          title="저녁 루틴"
+          title="마무리 루틴"
           routines={schedule.eveningRoutines}
           onRoutineAdd={addRoutine("evening")}
           onRoutineRemove={removeRoutine("evening")}

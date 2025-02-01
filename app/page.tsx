@@ -1,6 +1,6 @@
 "use client"
 
-import type { WeekSchedule } from "@/types"
+import type { WeekSchedule, TimeSlot } from "@/types"
 import { CurrentSlotInfo } from "../components/current-slot-info"
 import { ScheduleGrid } from "../components/schedule-grid"
 import { useLocalStorage } from "../hooks/useLocalStorage"
@@ -35,6 +35,16 @@ export default function HomePage() {
     )
   }
 
+  const handleUpdateSlot = (slotId: number, updates: Partial<TimeSlot>) => {
+    setSchedule({
+      ...schedule,
+      slots: schedule.slots.map(slot => 
+        slot.id === slotId ? { ...slot, ...updates } : slot
+      ),
+      lastUpdated: new Date().toISOString(),
+    })
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto py-20 px-4 space-y-8">
@@ -42,6 +52,8 @@ export default function HomePage() {
           <CurrentSlotInfo 
             currentSlot={getCurrentSlot()} 
             timeRanges={schedule.settings?.timeRanges || DEFAULT_TIME_RANGES}
+            slots={schedule.slots}
+            onUpdateSlot={handleUpdateSlot}
           />
         </div>
 

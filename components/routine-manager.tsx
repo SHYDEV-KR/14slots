@@ -58,6 +58,9 @@ export function RoutineManager({
   today.setHours(0, 0, 0, 0)
   const todayStr = getDateString(today)
 
+  // 오늘의 완료된 루틴 수 계산
+  const completedToday = routines.filter(routine => routine.dailyStatus[todayStr]?.completed).length
+
   const handleAddRoutine = () => {
     if (!newRoutine.trim()) return
     onRoutineAdd(newRoutine.trim())
@@ -99,11 +102,14 @@ export function RoutineManager({
         >
           <span className="text-sm font-medium">{title}</span>
           <span className="text-xs">
-            {routines.length}개의 루틴
+            {completedToday}/{routines.length} 완료
           </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent 
+        className="max-w-lg max-h-[90vh] flex flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{title} 관리</DialogTitle>
         </DialogHeader>
@@ -114,6 +120,8 @@ export function RoutineManager({
               value={newRoutine}
               onChange={(e) => setNewRoutine(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddRoutine()}
+              autoFocus={false}
+              tabIndex={-1}
             />
             <Button onClick={handleAddRoutine}>
               <Plus className="w-4 h-4" />
