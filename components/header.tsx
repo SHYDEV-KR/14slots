@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import type { TimeRange, TimeSlot, WeekSchedule } from "@/types"
-import { Download, Menu, RefreshCcw } from "lucide-react"
+import { Download, Menu, RefreshCcw, Upload } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 import { SlotSettings } from "./slot-settings"
@@ -40,12 +40,31 @@ export function Header() {
     if (!scheduleStr) return
 
     const schedule = JSON.parse(scheduleStr)
-    const dataStr = JSON.stringify(schedule, null, 2)
+    const { slots, settings } = schedule
+    const dataStr = JSON.stringify({ slots, settings }, null, 2)
     const blob = new Blob([dataStr], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `14slots-backup-${new Date().toISOString().split("T")[0]}.json`
+    a.download = `14slots-slots-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleRoutineDownload = () => {
+    const scheduleStr = localStorage.getItem("schedule")
+    if (!scheduleStr) return
+
+    const schedule = JSON.parse(scheduleStr)
+    const { morningRoutines, eveningRoutines } = schedule
+    const dataStr = JSON.stringify({ morningRoutines, eveningRoutines }, null, 2)
+    const blob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `14slots-routines-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -57,7 +76,7 @@ export function Header() {
     const slots: TimeSlot[] = []
     let slotId = 0
 
-    // 기존 슬롯의 정보를 저장
+    // 기존 슬롯의 데이터를 저장
     const slotInfoMap = new Map<string, Partial<TimeSlot>>()
     schedule.slots.forEach(slot => {
       const key = `${slot.day}-${slot.period}`
@@ -69,7 +88,7 @@ export function Header() {
       })
     })
 
-    // 새로운 시간대로 슬롯 생성하면서 기존 정보 유지
+    // 새로운 시간대로 슬롯 생성하면서 기존 데이터 유지
     for (const day of days) {
       for (const timeRange of timeRanges) {
         const key = `${day}-${timeRange.label}`
@@ -151,6 +170,82 @@ export function Header() {
     setShowResetDialog(false)
   }
 
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const uploadedData = JSON.parse(content)
+
+        // 기본적인 유효성 검사
+        if (!uploadedData.slots || !Array.isArray(uploadedData.slots)) {
+          alert('올바르지 않은 슬롯 데이터 형식입니다.')
+          return
+        }
+
+        setSchedule(prev => ({
+          ...prev,
+          slots: uploadedData.slots,
+          settings: uploadedData.settings || prev.settings,
+          lastUpdated: new Date().toISOString(),
+        }))
+        window.dispatchEvent(new Event('schedule-updated'))
+        window.location.reload()
+      } catch (error) {
+        console.error('파일 처리 중 오류 발생:', error)
+        alert('파일을 처리하는 중 오류가 발생했습니다.')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const handleRoutineUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const uploadedData = JSON.parse(content)
+
+        // 기본적인 유효성 검사
+        if (!uploadedData.morningRoutines || !uploadedData.eveningRoutines || 
+            !Array.isArray(uploadedData.morningRoutines) || !Array.isArray(uploadedData.eveningRoutines)) {
+          alert('올바르지 않은 루틴 데이터 형식입니다.')
+          return
+        }
+
+        setSchedule(prev => ({
+          ...prev,
+          morningRoutines: uploadedData.morningRoutines,
+          eveningRoutines: uploadedData.eveningRoutines,
+          lastUpdated: new Date().toISOString(),
+        }))
+        window.dispatchEvent(new Event('schedule-updated'))
+        window.location.reload()
+      } catch (error) {
+        console.error('파일 처리 중 오류 발생:', error)
+        alert('파일을 처리하는 중 오류가 발생했습니다.')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const handleRoutineReset = () => {
+    setSchedule(prev => ({
+      ...prev,
+      morningRoutines: [],
+      eveningRoutines: [],
+      lastUpdated: new Date().toISOString(),
+    }))
+    setShowResetDialog(false)
+    window.location.reload()
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm">
       <div className="container flex items-center justify-between h-14 px-4">
@@ -208,46 +303,125 @@ export function Header() {
 
                 <div className="mt-auto pt-6">
                   <Separator className="mb-6" />
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-medium">관리자 메뉴</h3>
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={handleDownload}
-                        className="justify-start gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        슬롯 정보 다운로드
-                      </Button>
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium">슬롯 데이터 관리</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={handleDownload}
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
 
-                      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-                        <DialogTrigger asChild>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="schedule-upload"
+                            className="hidden"
+                            accept=".json"
+                            onChange={handleUpload}
+                          />
                           <Button
-                            variant="destructive"
-                            className="justify-start gap-2"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => document.getElementById('schedule-upload')?.click()}
                           >
-                            <RefreshCcw className="h-4 w-4" />
-                            슬롯 초기화하기
+                            <Upload className="h-4 w-4" />
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>슬롯 초기화 확인</DialogTitle>
-                            <DialogDescription>
-                              정말로 모든 슬롯 정보를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-                              루틴 정보는 유지됩니다.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter className="flex gap-2">
-                            <Button variant="outline" onClick={() => setShowResetDialog(false)}>
-                              취소
+                        </div>
+
+                        <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="h-8 w-8 rounded-full"
+                            >
+                              <RefreshCcw className="h-4 w-4" />
                             </Button>
-                            <Button variant="destructive" onClick={handleReset}>
-                              초기화
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>슬롯 초기화 확인</DialogTitle>
+                              <DialogDescription>
+                                정말로 모든 슬롯 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="flex gap-2">
+                              <Button variant="outline" onClick={() => setShowResetDialog(false)}>
+                                취소
+                              </Button>
+                              <Button variant="destructive" onClick={handleReset}>
+                                초기화
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium">루틴 데이터 관리</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={handleRoutineDownload}
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="routine-upload"
+                            className="hidden"
+                            accept=".json"
+                            onChange={handleRoutineUpload}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => document.getElementById('routine-upload')?.click()}
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="h-8 w-8 rounded-full"
+                            >
+                              <RefreshCcw className="h-4 w-4" />
                             </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>루틴 초기화 확인</DialogTitle>
+                              <DialogDescription>
+                                정말로 모든 루틴 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="flex gap-2">
+                              <Button variant="outline" onClick={() => setShowResetDialog(false)}>
+                                취소
+                              </Button>
+                              <Button variant="destructive" onClick={handleRoutineReset}>
+                                초기화
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </div>
                 </div>
