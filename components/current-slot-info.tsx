@@ -26,7 +26,7 @@ export interface CurrentSlotInfoProps {
 }
 
 export function CurrentSlotInfo({ currentSlot, timeRanges, slots = [], onUpdateSlot }: CurrentSlotInfoProps) {
-  const [todos, setTodos] = useLocalStorage<Array<{
+  const [todos, setTodos] = useLocalStorage<Array<{    // eslint-disable-line @typescript-eslint/no-unused-vars
     id: string;
     text: string;
     completed: boolean;
