@@ -56,7 +56,8 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#1E1F22" />
+        <meta name="theme-color" content="#1E1F22" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <Script
           id="register-sw"

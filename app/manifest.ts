@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: '14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#000000',
-    theme_color: '#000000',
+    background_color: '#1E1F22',
+    theme_color: '#1E1F22',
     icons: [
       {
         src: '/logo.svg',
