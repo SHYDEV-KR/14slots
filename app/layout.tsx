@@ -3,8 +3,8 @@ import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import Script from "next/script";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#1E1F22" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <Script
           id="register-sw"

@@ -185,9 +185,10 @@ export function Header() {
                   <SheetTitle>14 Slots 사용 안내</SheetTitle>
                   <SheetDescription>
                     14개의 슬롯으로 시간을 관리하는 효율적인 시간 관리 도구입니다.
-                    <p className="mt-2 text-destructive">
-                      * 슬롯이 보이지 않는다면 아래의 슬롯 초기화하기를 눌러주세요.
-                    </p>
+                    <br />
+                    <span className="mt-2 text-destructive">
+                      * 슬롯이 보이지 않는다면 새로고침을 해보세요.
+                    </span>
                   </SheetDescription>
                 </SheetHeader>
 

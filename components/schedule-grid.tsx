@@ -62,6 +62,15 @@ const CATEGORIES: Record<SlotCategory, { name: string; color: string; bgClass: s
   },
 }
 
+const RECOMMENDED_SLOTS = {
+  personal: { min: 2, max: 2, name: "개인 충전/회복", description: "2개" },
+  family: { min: 1, max: 2, name: "가족/연인", description: "1-2개" },
+  team: { min: 1, max: 1, name: "팀원 관리", description: "1개" },
+  organization: { min: 1, max: 1, name: "조직 문화/시스템", description: "1개" },
+  strategy: { min: 1, max: 1, name: "전략/방향", description: "1개" },
+  business: { min: 6, max: 8, name: "고객/사업개발", description: "6-8개" },
+}
+
 interface ScheduleGridProps {
   schedule: WeekSchedule
   setSchedule: (schedule: WeekSchedule) => void
@@ -88,6 +97,50 @@ function SlotContent({ slot, timeRange }: { slot: TimeSlot; timeRange: TimeRange
   return (
     <div className="text-sm font-medium opacity-50">
       {timeRange.label}
+    </div>
+  )
+}
+
+function SlotUsageChart({ slots }: { slots: TimeSlot[] }) {
+  const usage = Object.entries(CATEGORIES).reduce((acc, [category]) => {
+    acc[category as SlotCategory] = slots.filter(slot => slot.category === category).length
+    return acc
+  }, {} as Record<SlotCategory, number>)
+
+  return (
+    <div className="space-y-6 mt-8 p-6 rounded-xl border bg-card">
+      <h3 className="text-lg font-semibold">슬롯 사용 현황</h3>
+      <div className="space-y-4">
+        {Object.entries(RECOMMENDED_SLOTS).map(([category, recommendation]) => {
+          const count = usage[category as SlotCategory] || 0
+          const percentage = (count / (recommendation.max || 1)) * 100
+          const isWithinRange = count >= recommendation.min && count <= recommendation.max
+          
+          return (
+            <div key={category} className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className={CATEGORIES[category as SlotCategory].color}>
+                  {CATEGORIES[category as SlotCategory].name}
+                </span>
+                <span className="text-muted-foreground">
+                  {count}개 / 권장 {recommendation.description}
+                </span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    isWithinRange ? "bg-green-500" : "bg-yellow-500"
+                  }`}
+                  style={{ width: `${Math.min(100, percentage)}%` }}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-sm text-muted-foreground mt-4">
+        * 균형 잡힌 시간 관리를 위해 권장 슬롯 수를 참고해 주세요.
+      </p>
     </div>
   )
 }
@@ -329,6 +382,7 @@ export function ScheduleGrid({
       <div className="text-sm text-muted-foreground text-center">
         마지막 수정: {new Date(schedule.lastUpdated).toLocaleString()}
       </div>
+      <SlotUsageChart slots={schedule.slots} />
     </div>
   )
 }
