@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/sheet"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import type { TimeRange, TimeSlot, WeekSchedule } from "@/types"
-import { Download, Menu, RefreshCcw, Upload } from "lucide-react"
+import { Download, Menu, Moon, RefreshCcw, Sun, Upload } from "lucide-react"
+import { useTheme } from "next-themes"
 import Image from "next/image"
 import { useState } from "react"
 import { SlotSettings } from "./slot-settings"
@@ -21,6 +22,7 @@ import { UsageGuidelines } from "./usage-guidelines"
 
 export function Header() {
   const [showResetDialog, setShowResetDialog] = useState(false)
+  const { theme, setTheme } = useTheme()
   const [schedule, setSchedule] = useLocalStorage<WeekSchedule>("schedule", {
     slots: [],
     morningRoutines: [],
@@ -248,18 +250,18 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm">
-      <div className="container flex items-center justify-between h-14 px-4">
+      <div className="container max-w-4xl mx-auto flex h-14 items-center px-4">
         <div className="flex items-center gap-2">
           <Image
             src="/logo.svg"
-            alt="14 Slots Logo"
             width={24}
             height={24}
+            alt="14 Slots"
             className="rounded-md"
           />
           <h1 className="text-lg font-bold">14 Slots</h1>
         </div>
-        
+        <div className="flex-1" />
         <div className="flex items-center gap-2">
           <SlotSettings
             timeRanges={schedule.settings?.timeRanges || [
@@ -270,7 +272,7 @@ export function Header() {
           />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="shrink-0">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -288,6 +290,22 @@ export function Header() {
                 </SheetHeader>
 
                 <div className="mt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium">테마 설정</h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="shrink-0"
+                    >
+                      {theme === "dark" ? (
+                        <Moon className="h-4 w-4" />
+                      ) : (
+                        <Sun className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <Separator className="mb-4" />
                   <UsageGuidelines />
                   <div className="mt-4">
                     <a 
