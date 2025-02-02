@@ -201,7 +201,7 @@ export function MemoPad() {
         </TabsContent>
 
         <TabsContent value="memos" className="flex-1 overflow-hidden m-0 px-4">
-          <div className="h-full py-4">
+          <div className="h-full py-4 overflow-auto">
             <Textarea
               placeholder="자유롭게 메모를 작성해보세요..."
               value={memo}
